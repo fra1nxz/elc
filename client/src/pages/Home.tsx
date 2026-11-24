@@ -8,7 +8,7 @@ export default function Home() {
     <div className="wrap">
       <div className="hero rise">
         <h1>Elc</h1>
-        <p className="lead">Краткое описание приложения: что оно делает и зачем оно нужно. Один доступ — навсегда, без подписки.</p>
+        <p className="lead">«Ёлка» — новогоднее приложение для macOS 12 и новее. Внутри — пиксельная комната с ёлкой, камином и маленьким помощником.</p>
         <Link className="btn" to="/pay">Купить доступ</Link>
       </div>
 
