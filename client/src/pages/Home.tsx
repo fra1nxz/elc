@@ -34,7 +34,7 @@ export default function Home() {
         <h2>Покупка</h2>
         <div className="buy">
           <div>
-            <div className="price">{price}</div>
+            <div className="price">400 рублей</div>
             <ul>
               <li>Оплата один раз, подписки нет</li>
               <li>Код появится на сайте и придёт на email</li>

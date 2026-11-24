@@ -1,8 +1,8 @@
 import { randomInt } from "node:crypto";
 
-// Латиница и цифры без похожих символов (0/O, 1/I)
+
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-export const CODE_LENGTH = 16; // в диапазоне 15–20 по ТЗ
+export const CODE_LENGTH = 16; // 
 
 export function generateCode(): string {
   let out = "";

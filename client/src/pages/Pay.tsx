@@ -26,7 +26,7 @@ export default function Pay() {
       });
       if (!r.ok) throw new Error(String(r.status));
       const { url } = (await r.json()) as { url: string };
-      window.location.href = url; // переход на страницу платёжного провайдера
+      window.location.href = url; 
     } catch {
       setError("Не удалось начать оплату. Попробуйте ещё раз.");
       setBusy(false);
@@ -37,7 +37,7 @@ export default function Pay() {
     <div className="wrap">
       <form className="page" onSubmit={submit} noValidate>
         <h2>Оплата доступа</h2>
-        <p className="muted">Стоимость: <strong className="plain">{price}</strong>, один раз. Активационный код придёт на указанную почту.</p>
+        <p className="muted">Стоимость: <strong className="plain">400 рублей</strong>, один раз. Активационный код придёт на указанную почту.</p>
         <label htmlFor="email">Ваш email</label>
         <input id="email" type="email" inputMode="email" autoComplete="email" placeholder="name@example.com"
           value={email} onChange={(e) => setEmail(e.target.value)} aria-invalid={!!error} />
