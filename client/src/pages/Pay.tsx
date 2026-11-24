@@ -1,5 +1,6 @@
 import { FormEvent, useState } from "react";
 import { usePrice } from "../usePrice";
+import { apiUrl } from "../api";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -19,7 +20,7 @@ export default function Pay() {
     setError("");
     setBusy(true);
     try {
-      const r = await fetch("/api/checkout", {
+      const r = await fetch(apiUrl("/api/checkout"), {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ email: value }),
@@ -37,7 +38,7 @@ export default function Pay() {
     <div className="wrap">
       <form className="page" onSubmit={submit} noValidate>
         <h2>Оплата доступа</h2>
-        <p className="muted">Стоимость: <strong className="plain">400 рублей</strong>, один раз. Активационный код придёт на указанную почту.</p>
+        <p className="muted">Стоимость: <strong className="plain">{price}</strong>, один раз. Активационный код придёт на указанную почту.</p>
         <label htmlFor="email">Ваш email</label>
         <input id="email" type="email" inputMode="email" autoComplete="email" placeholder="name@example.com"
           value={email} onChange={(e) => setEmail(e.target.value)} aria-invalid={!!error} />

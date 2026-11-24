@@ -15,6 +15,23 @@ import {
 const app = express();
 app.disable("x-powered-by");
 
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+
+  if (origin === config.clientUrl) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Vary", "Origin");
+    res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  }
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+
+  next();
+});
+
 // --- Вебхук платёжного провайдера: нужно сырое тело для проверки подписи ---
 const webhookSchema = z.object({ orderId: z.string().uuid(), status: z.enum(["paid", "failed"]) });
 app.post("/api/webhook/payment", express.raw({ type: "*/*", limit: "100kb" }), async (req, res) => {

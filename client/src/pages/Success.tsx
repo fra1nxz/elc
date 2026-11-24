@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { apiUrl } from "../api";
 
 interface PurchaseView { status: "pending" | "paid" | "failed"; code?: string; email?: string }
 
@@ -11,13 +12,13 @@ export default function Success() {
   const [timedOut, setTimedOut] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // Код показываем только после того, как сервер подтвердил оплату; пока ждём — опрашиваем
+
   useEffect(() => {
     if (!token) return;
     let stop = false, tries = 0, timer = 0;
     const tick = async () => {
       try {
-        const r = await fetch(`/api/purchase/${encodeURIComponent(token)}`);
+        const r = await fetch(apiUrl(`/api/purchase/${encodeURIComponent(token)}`))
         if (stop) return;
         if (r.status === 404) return navigate("/fail", { replace: true });
         const d = (await r.json()) as PurchaseView;
