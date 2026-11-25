@@ -144,7 +144,7 @@ export default function Agreement() {
 
         <h2>12. Контакты и сведения о Продавце</h2>
         <p>
-          Продавец: <strong>[ФИО продавца полностью]</strong>.<br />
+          Продавец: <strong>Суворов Павел Игоревич</strong>.<br />
           Поддержка: <a href="https://t.me/zxelegia" target="_blank" rel="noreferrer">@zxelegia</a>.
         </p>
       </article>
