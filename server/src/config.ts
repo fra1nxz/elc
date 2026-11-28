@@ -11,7 +11,7 @@ export const config = {
   clientUrl: process.env.CLIENT_URL ?? "http://localhost:5173",
   serverUrl: process.env.SERVER_URL ?? "http://localhost:3001",
   dbPath: process.env.DB_PATH ?? "data/elc.db",
-  priceMinor: Number(process.env.PRICE_MINOR ?? 99000),
+  priceMinor: Number(process.env.PRICE_MINOR ?? 40000),
   currency: process.env.CURRENCY ?? "RUB",
   webhookSecret: required("PAYMENT_WEBHOOK_SECRET"),
   adminToken: required("ADMIN_TOKEN"),

@@ -66,25 +66,20 @@ export async function handlePaymentEvent(orderId: string, status: "paid" | "fail
   return r.found;
 }
 
-type Activation =
-  | { ok: true; firstActivation: boolean }
-  | { ok: false; status: 404 | 403; error: "unknown_code" | "device_mismatch" };
-
-export const activate = db.transaction((code: string, deviceId: string): Activation => {
-  const row = db.prepare("SELECT device_id FROM codes WHERE code=?").get(code) as { device_id: string | null } | undefined;
-  if (!row) return { ok: false, status: 404, error: "unknown_code" };
-  if (row.device_id === null) {
-    db.prepare("UPDATE codes SET device_id=?, activated_at=datetime('now') WHERE code=?").run(deviceId, code);
-    return { ok: true, firstActivation: true };
-  }
-  if (row.device_id === deviceId) return { ok: true, firstActivation: false };
-  return { ok: false, status: 403, error: "device_mismatch" };
-});
-
 export const resetBinding = db.transaction((code: string, reason: string | undefined): boolean => {
-  const row = db.prepare("SELECT device_id FROM codes WHERE code=?").get(code) as { device_id: string | null } | undefined;
+  const row = db.prepare("SELECT device_id, device_public_key FROM codes WHERE code=?").get(code) as {
+    device_id: string | null;
+    device_public_key: string | null;
+  } | undefined;
   if (!row) return false;
-  db.prepare("INSERT INTO resets (code, old_device_id, reason) VALUES (?,?,?)").run(code, row.device_id, reason ?? null);
-  db.prepare("UPDATE codes SET device_id=NULL, activated_at=NULL WHERE code=?").run(code);
+  db.prepare(`
+    INSERT INTO resets (code, old_device_id, old_device_public_key, reason)
+    VALUES (?, ?, ?, ?)
+  `).run(code, row.device_id, row.device_public_key, reason ?? null);
+  db.prepare(`
+    UPDATE codes
+    SET device_id=NULL, device_public_key=NULL, key_algorithm=NULL, activated_at=NULL
+    WHERE code=?
+  `).run(code);
   return true;
 });

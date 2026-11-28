@@ -2,3 +2,12 @@ node_modules
 dist
 .env
 server/data
+
+# Local files and test keys
+.DS_Store
+tmp-license-test/
+**/tmp-license-test/
+*.pem
+*.p12
+*.p8
+*.key

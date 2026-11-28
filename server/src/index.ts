@@ -8,9 +8,15 @@ import { config } from "./config.js";
 import { db } from "./db.js";
 import { isMock, provider, verifySignature } from "./payment.js";
 import {
-  activate, createPurchase, getCodeFor, getPurchase, getPurchaseByToken,
+  createPurchase, getCodeFor, getPurchase, getPurchaseByToken,
   handlePaymentEvent, resetBinding,
 } from "./service.js";
+import "./migrations/001_device_keys.js";
+import {
+  createChallenge,
+  activateWithKey,
+  checkLicenseWithKey,
+} from "./license.js";
 
 const app = express();
 app.disable("x-powered-by");
@@ -48,6 +54,77 @@ app.post("/api/webhook/payment", express.raw({ type: "*/*", limit: "100kb" }), a
 app.use(express.json({ limit: "10kb" }));
 const strict = rateLimit({ windowMs: 60_000, limit: 20, standardHeaders: true, legacyHeaders: false });
 
+const activationSchema = z.object({
+  publicKey: z.string().min(100).max(500),
+  challengeId: z.string().uuid(),
+  signature: z.string().min(80).max(500),
+});
+
+app.post("/api/activation/challenge", strict, (req, res) => {
+  const schema = z.object({
+    publicKey: z.string().min(100).max(500),
+  });
+
+  const parsed = schema.safeParse(req.body);
+
+  if (!parsed.success) {
+    return res.status(400).json({ ok: false, error: "invalid_request" });
+  }
+
+  const result = createChallenge(parsed.data.publicKey);
+
+  res.setHeader("Cache-Control", "no-store");
+  if (!result.ok) {
+    return res.status(400).json(result);
+  }
+
+  return res.json(result);
+});
+
+app.post("/api/activate", strict, (req, res) => {
+  const schema = activationSchema.extend({
+    code: z.string().trim().min(15).max(20),
+  });
+
+  const parsed = schema.safeParse(req.body);
+
+  if (!parsed.success) {
+    return res.status(400).json({ ok: false, error: "invalid_request" });
+  }
+
+  const { code, publicKey, challengeId, signature } = parsed.data;
+
+  const result = activateWithKey(code.trim().toUpperCase(), publicKey, challengeId, signature);
+
+  if (!result.ok) {
+    return res.status(result.status).json(result);
+  }
+
+  return res.json({ ok: true, firstActivation: result.firstActivation });
+});
+
+app.post("/api/activation/check", strict, (req, res) => {
+  const schema = activationSchema.extend({
+    code: z.string().trim().min(15).max(20),
+  });
+
+  const parsed = schema.safeParse(req.body);
+
+  if (!parsed.success) {
+    return res.status(400).json({ ok: false, error: "invalid_request" });
+  }
+
+  const { code, publicKey, challengeId, signature } = parsed.data;
+
+  const result = checkLicenseWithKey(code.trim().toUpperCase(), publicKey, challengeId, signature);
+
+  if (!result.ok) {
+    return res.status(result.status).json(result);
+  }
+
+  return res.json({ ok: true });
+});
+
 // --- Сайт ---
 app.get("/api/config", (_req, res) => {
   res.json({ price: config.priceMinor / 100, currency: config.currency });
@@ -83,17 +160,7 @@ app.get("/api/purchase/:token", (req, res) => {
   res.json({ status: "paid", email: p.email, code: getCodeFor(p.id) });
 });
 
-// --- API для приложения ---
-app.post("/api/activate", strict, (req, res) => {
-  const body = z
-    .object({ code: z.string().trim().min(15).max(20), deviceId: z.string().min(8).max(128) })
-    .safeParse(req.body);
-  if (!body.success) return res.status(400).json({ error: "bad_request" });
-  const r = activate(body.data.code.toUpperCase(), body.data.deviceId);
-  if (!r.ok) return res.status(r.status).json({ ok: false, error: r.error });
-  res.json({ ok: true });
-});
-
+// --- API для приложения: активация только через ECDSA challenge ---
 // --- Поддержка: ручной сброс привязки ---
 app.post("/api/admin/reset", strict, (req, res) => {
   const given = Buffer.from(req.header("x-admin-token") ?? "");
